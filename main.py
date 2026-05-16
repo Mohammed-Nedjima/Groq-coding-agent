@@ -6,6 +6,11 @@ from groq import Groq
 from yaspin import yaspin
 # import argcomplete
 # from argcomplete.completers import ChoicesCompleter
+from functions.get_file_content import get_file_content, get_file_content_schema
+from functions.get_files_info import get_files_info, get_files_info_schema
+from functions.write_file import write_file, write_file_schema
+from functions.run_python_file import run_python_file, run_python_schema
+from prompts import system_prompt
 
 
 # AVAILABLE_MODELS = [
@@ -13,6 +18,14 @@ from yaspin import yaspin
 #     "llama-3.1-8b-instant",
 #     "mixtral-8x7b-32768",
 # ]
+
+AVAILABLE_FUNCTIONS = {
+    "get_file_content": get_file_content,
+    "get_files_info": get_files_info,
+    "write_file": write_file,
+    "run_python_file": run_python_file
+}
+
 
 def print_chat_completion(user_prompt, chat_completion, stream, verbose=False):
     if stream:
@@ -28,6 +41,7 @@ def print_chat_completion(user_prompt, chat_completion, stream, verbose=False):
         # print(f"Model response: {content}")
         print("Prompt tokens:", chat_completion.usage.prompt_tokens)
         print("Response tokens:", chat_completion.usage.completion_tokens)
+
 
 def main():
     parser = argparse.ArgumentParser(description="Chatbot")
@@ -54,11 +68,12 @@ def main():
         raise ValueError("GROQ_API_KEY not found in environment variables.")
 
     client = Groq()
-    
+
     stream = not args.verbose
     with yaspin(text="Waiting for model response...", spinner="dots") as spinner:
         chat_completion = client.chat.completions.create(
             messages=[
+                {"role": "system", "content": system_prompt},
                 {
                     "role": "user",
                     "content": args.user_prompt,
@@ -69,8 +84,13 @@ def main():
             max_completion_tokens=1024,
             top_p=1,
             stream=stream,
-            stop=None
+            stop=None,
+            tools=[get_file_content_schema, get_files_info_schema,
+                   write_file_schema, run_python_schema]
         )
-    print_chat_completion(args.user_prompt, chat_completion, stream=stream, verbose=args.verbose)
+    print_chat_completion(args.user_prompt, chat_completion,
+                          stream=stream, verbose=args.verbose)
+
+
 if __name__ == "__main__":
     main()
