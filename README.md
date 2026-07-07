@@ -23,7 +23,7 @@ python main.py "fix the bug in main.py"
 python main.py "add error handling to all functions" --verbose
 ```
 
-`--verbose` disables streaming and shows token usage instead.
+`--verbose` shows token usage instead and detailed function calls.
 
 ## Setup
 
@@ -33,14 +33,15 @@ cp .env.example .env  # add your GROQ_API_KEY
 ```
 
 ## Project structure
-├── main.py                  # CLI entrypoint and agent loop
-├── prompts.py               # System prompt
+
+├── main.py # CLI entrypoint and agent loop
+├── prompts.py # System prompt
 ├── functions/
-│   ├── get_file_content.py  # Read files (sandboxed)
-│   ├── get_files_info.py    # List directory contents
-│   ├── write_file.py        # Write files (sandboxed)
-│   └── run_python_file.py   # Execute Python scripts
-└── tests/                   # Unit tests for each tool
+│ ├── get_file_content.py # Read files (sandboxed)
+│ ├── get_files_info.py # List directory contents
+│ ├── write_file.py # Write files (sandboxed)
+│ └── run_python_file.py # Execute Python scripts
+└── tests/ # Unit tests for each tool
 
 ## Stack
 

@@ -10,16 +10,12 @@ get_file_content_schema = {
         "parameters": {
             "type": "object",
             "properties": {
-                "working_directory": {
-                    "type": "string",
-                    "description": "the working directory that the function is allowed to access. The function will only read files within this directory and its subdirectories. This is a required parameter."
-                },
                 "file_path": {
                     "type": "string",
                     "description": "The path to the file to read, relative to the working directory. This is a required parameter."
                 }
             },
-            "required": ["working_directory", "file_path"]
+            "required": ["file_path"]
         }
     }
 }
