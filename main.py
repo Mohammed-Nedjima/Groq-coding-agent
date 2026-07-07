@@ -2,7 +2,7 @@
 import argparse
 import os
 from dotenv import load_dotenv
-from groq import APIConnectionError, APIError, Groq
+from groq import APIConnectionError, APIError, BadRequestError, Groq
 from httpcore import stream
 from yaspin import yaspin
 from call_function import execute_function_call
@@ -14,7 +14,7 @@ from prompts import system_prompt
 
 MODEL = "openai/gpt-oss-120b"
 MAX_ITERATIONS = 10
-
+TOOL_CALL_RETRY_ATTEMPTS = 3
 TOOLS = [
     get_file_content_schema,
     get_files_info_schema,
@@ -47,21 +47,33 @@ def run_agent(client, user_prompt, verbose=False):
     ]
 
     for iteration in range(MAX_ITERATIONS):
-        try:
-            with yaspin(text="Waiting for model response...", spinner="dots"):
-                response = client.chat.completions.create(
-                    messages=messages,
-                    model=MODEL,
-                    temperature=0.3,
-                    max_completion_tokens=1024,
-                    top_p=1,
-                    stop=None,
-                    tools=TOOLS,
-                )
-        except APIConnectionError as e:
-            return f"Error: Could not reach Groq's API (network issue): {e}"
-        except APIError as e:
-            return f"Error: Groq API request failed: {e}"
+        response = None
+        last_error = None
+        for attempt in range(TOOL_CALL_RETRY_ATTEMPTS):
+            try:
+                with yaspin(text="Waiting for model response...", spinner="dots"):
+                    response = client.chat.completions.create(
+                        messages=messages,
+                        model=MODEL,
+                        temperature=0.3,
+                        max_completion_tokens=1024,
+                        top_p=1,
+                        stop=None,
+                        tools=TOOLS,
+                    )
+                break
+            except APIConnectionError as e:
+                last_error = f"Error: Could not reach Groq's API (network issue): {e}"
+            except BadRequestError as e:
+                last_error = e
+                if verbose:
+                    print(
+                        f" (tool call generation malformed, retry {attempt + 1}/{TOOL_CALL_RETRY_ATTEMPTS})")
+                    continue
+            except APIError as e:
+                return f"Error: Groq API request failed: {e}"
+        if response is None:
+            return f"Error: Groq API request failed: {last_error}"
 
         response_message = response.choices[0].message
 
