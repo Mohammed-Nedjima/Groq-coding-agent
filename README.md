@@ -64,8 +64,7 @@ echo "GROQ_API_KEY=your-api-key-here" > .env
 ```
 
 Replace `your-api-key-here` with a key from the
-[Groq Console](https://console.groq.com/keys). The `.env` file is already
-covered by `.gitignore`, so your key won't accidentally get committed.
+[Groq Console](https://console.groq.com/keys). 
 
 ## Usage
 
